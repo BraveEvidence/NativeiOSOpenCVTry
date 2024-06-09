@@ -2,9 +2,6 @@
 #import <opencv2/imgcodecs/ios.h>
 #import "OpenCVWrapper.h"
 
-/*
- * Add a method convertToMat to UIImage class
- */
 @interface UIImage (OpenCVWrapper)
 - (void)convertToMat: (cv::Mat *)pMat: (bool)alphaExists;
 @end
@@ -36,18 +33,21 @@
 
 @implementation OpenCVWrapper
 
+static cv::CascadeClassifier faceCascade;
+
++ (void)initialize {
+    if (self == [OpenCVWrapper self]) {
+        NSString *faceCascadePath = [[NSBundle mainBundle] pathForResource:@"haarcascade_frontalface_default" ofType:@"xml"];
+        if (!faceCascade.load([faceCascadePath UTF8String])) {
+            NSLog(@"Error loading face detection model");
+        }
+    }
+}
+
 + (NSArray<NSValue *> *)detectFaceRectsInUIImage:(UIImage *)image {
     // Convert UIImage to cv::Mat
     cv::Mat mat;
     [image convertToMat:&mat :false];
-
-    // Load the face detection model
-    NSString *faceCascadePath = [[NSBundle mainBundle] pathForResource:@"haarcascade_frontalface_default" ofType:@"xml"];
-    cv::CascadeClassifier faceCascade;
-    if (!faceCascade.load([faceCascadePath UTF8String])) {
-        NSLog(@"Error loading face detection model");
-        return @[];
-    }
 
     // Convert the image to grayscale
     cv::Mat gray;
